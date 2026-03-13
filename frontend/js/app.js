@@ -4,7 +4,13 @@ let pendingUserId = null;
 let pendingOtp = null;
 let pendingResetToken = null;
 
-const API_URL = '/api';
+// Get API base URL from meta tag (set during deployment)
+let API_BASE_URL = '';
+const metaTag = document.querySelector('meta[name="api-base-url"]');
+if (metaTag && metaTag.getAttribute('content')) {
+  API_BASE_URL = metaTag.getAttribute('content');
+}
+
 let currentUser = null;
 let currentStore = null;
 let isEnglish = false;
@@ -163,7 +169,7 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
         options.body = JSON.stringify(body);
     }
 
-    const response = await fetch(`${API_URL}${endpoint}`, options);
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
     const data = await response.json();
 
     if (!response.ok) {
@@ -228,7 +234,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     };
 
     try {
-        const result = await apiRequest('/auth/login', 'POST', data);
+        const result = await apiRequest('/api/auth/login', 'POST', data);
         setToken(result.data.token);
         setUser(result.data.user);
         setStore(result.data.store);
@@ -258,7 +264,7 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     };
 
     try {
-        const result = await apiRequest('/auth/register', 'POST', data);
+        const result = await apiRequest('/api/auth/register', 'POST', data);
         alert('تم إنشاء الحساب بنجاح. الرمز: ' + result.data.otp);
         
         document.getElementById('otpUserId').value = result.data.user_id;
@@ -282,11 +288,11 @@ document.getElementById('otpForm').addEventListener('submit', async (e) => {
         let result;
         if (isPasswordReset) {
             // Use verify-reset-otp for password reset
-            result = await apiRequest('/auth/verify-reset-otp', 'POST', data);
+            result = await apiRequest('/api/auth/verify-reset-otp', 'POST', data);
             pendingResetToken = result.data.reset_token;
         } else {
             // Use verify-otp for registration
-            result = await apiRequest('/auth/verify-otp', 'POST', data);
+            result = await apiRequest('/api/auth/verify-otp', 'POST', data);
         }
         
         if (isPasswordReset) {
@@ -312,7 +318,7 @@ document.getElementById('forgotPasswordForm').addEventListener('submit', async (
     };
 
     try {
-        const result = await apiRequest('/auth/forgot-password', 'POST', data);
+        const result = await apiRequest('/api/auth/forgot-password', 'POST', data);
         alert('تم إرسال رمز التحقق. الرمز: ' + result.data.otp);
         
         isPasswordReset = true;
@@ -364,7 +370,7 @@ async function showDashboard() {
 
     // Get unread messages count
     try {
-        const result = await apiRequest('/messages/unread/count');
+        const result = await apiRequest('/api/messages/unread/count');
         const count = result.data.count;
         document.getElementById('messagesCount').textContent = count > 0 ? `(${count}) رسائل جديدة` : 'الرسائل';
     } catch (error) {
@@ -393,7 +399,7 @@ document.getElementById('createStoreForm').addEventListener('submit', async (e) 
     };
 
     try {
-        const result = await apiRequest('/stores', 'POST', data);
+        const result = await apiRequest('/api/stores', 'POST', data);
         currentStore = result.data;
         setStore(currentStore);
         closeModal('createStoreModal');
@@ -416,7 +422,7 @@ async function showProducts() {
     }
 
     try {
-        const result = await apiRequest('/products/my-products');
+        const result = await apiRequest('/api/products/my-products');
         const products = result.data;
         
         const productsList = document.getElementById('productsList');
@@ -482,10 +488,10 @@ document.getElementById('addProductForm').addEventListener('submit', async (e) =
 
     try {
         if (productId) {
-            await apiRequest(`/products/${productId}`, 'PUT', data);
+            await apiRequest(`/api/products/${productId}`, 'PUT', data);
             alert('تم تحديث المنتج بنجاح');
         } else {
-            await apiRequest('/products', 'POST', data);
+            await apiRequest('/api/products', 'POST', data);
             alert('تمت إضافة المنتج بنجاح');
         }
         closeModal('addProductModal');
@@ -499,7 +505,7 @@ async function deleteProduct(id) {
     if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
 
     try {
-        await apiRequest(`/products/${id}`, 'DELETE');
+        await apiRequest(`/api/products/${id}`, 'DELETE');
         showProducts();
         alert('تم حذف المنتج بنجاح');
     } catch (error) {
@@ -510,7 +516,7 @@ async function deleteProduct(id) {
 // Marketplace Functions
 async function showMarketplace() {
     try {
-        const result = await apiRequest('/stores/all');
+        const result = await apiRequest('/api/stores/all');
         const stores = result.data;
         
         const storesList = document.getElementById('storesList');
@@ -538,7 +544,7 @@ async function showMarketplace() {
 
 async function showStoreProducts(storeId, storeName) {
     try {
-        const result = await apiRequest(`/products/store/${storeId}`);
+        const result = await apiRequest(`/api/products/store/${storeId}`);
         const products = result.data;
         
         document.getElementById('storeProductsTitle').textContent = `منتجات ${storeName}`;
@@ -593,7 +599,7 @@ async function showSalesInvoices() {
     }
 
     try {
-        const result = await apiRequest('/invoices/sales');
+        const result = await apiRequest('/api/invoices/sales');
         const invoices = result.data;
         
         const invoicesList = document.getElementById('salesInvoicesList');
@@ -626,7 +632,7 @@ async function showPurchaseInvoices() {
     }
 
     try {
-        const result = await apiRequest('/invoices/purchases');
+        const result = await apiRequest('/api/invoices/purchases');
         const invoices = result.data;
         
         const invoicesList = document.getElementById('purchaseInvoicesList');
@@ -663,8 +669,8 @@ async function showCreateInvoice(type) {
     document.getElementById('clientLabel').textContent = type === 'sales' ? 'اسم العميل' : 'اسم المورد';
     document.getElementById('phoneLabel').textContent = 'رقم الهاتف';
 
-    try {
-        const result = await apiRequest('/products/my-products');
+     try {
+        const result = await apiRequest('/api/products/my-products');
         const products = result.data;
         
         const productsContainer = document.getElementById('invoiceProducts');
@@ -740,7 +746,7 @@ document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
     };
 
     try {
-        await apiRequest(`/invoices/${type}`, 'POST', data);
+        await apiRequest(`/api/invoices/${type}`, 'POST', data);
         closeModal('invoiceModal');
         alert('تم إنشاء الفاتورة بنجاح');
         
@@ -763,7 +769,7 @@ document.getElementById('messageForm').addEventListener('submit', async (e) => {
     };
 
     try {
-        await apiRequest('/messages', 'POST', data);
+        await apiRequest('/api/messages', 'POST', data);
         closeModal('messageModal');
         alert('تم إرسال الرسالة بنجاح');
         e.target.reset();
@@ -775,7 +781,7 @@ document.getElementById('messageForm').addEventListener('submit', async (e) => {
 // Messages Functions
 async function showMessages() {
     try {
-        const result = await apiRequest('/messages/conversations');
+        const result = await apiRequest('/api/messages/conversations');
         const conversations = result.data;
         
         const conversationsList = document.getElementById('conversationsList');
@@ -810,7 +816,7 @@ async function openChat(userId, userName) {
     event.target.closest('.conversation-item').classList.add('active');
     
     try {
-        const result = await apiRequest(`/messages/${userId}`);
+        const result = await apiRequest(`/api/messages/${userId}`);
         const messages = result.data;
         
         const chatMessages = document.getElementById('chatMessages');
@@ -834,7 +840,7 @@ async function sendMessage() {
     if (!content || !selectedChatUser) return;
     
     try {
-        await apiRequest('/messages', 'POST', {
+        await apiRequest('/api/messages', 'POST', {
             receiver_id: selectedChatUser.id,
             content: content
         });
@@ -853,8 +859,8 @@ async function showInventory() {
         return;
     }
 
-    try {
-        const result = await apiRequest('/products/my-products');
+     try {
+        const result = await apiRequest('/api/products/my-products');
         const products = result.data;
         
         const inventoryList = document.getElementById('inventoryList');
@@ -943,7 +949,7 @@ document.getElementById('resetPasswordForm').addEventListener('submit', async (e
     };
 
     try {
-        await apiRequest('/auth/reset-password', 'POST', data);
+        await apiRequest('/api/auth/reset-password', 'POST', data);
         alert('تم تغيير كلمة المرور بنجاح. يرجى تسجيل الدخول.');
         closeModal('resetPasswordModal');
         isPasswordReset = false;
