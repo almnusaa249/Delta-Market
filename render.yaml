@@ -3,13 +3,11 @@ services:
     name: deltamarket-backend
     env: node
     plan: free
-    buildCommand: npm install
+    buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: deltamarket-db
-          property: connectionString
+        # Set this to your Neon connection string in the Render dashboard
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
