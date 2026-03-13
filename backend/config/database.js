@@ -1,17 +1,105 @@
-const { Pool } = require('pg');
 const path = require('path');
 require('dotenv').config();
 
-// PostgreSQL connection pool
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  // For hosting services like Render, we might need SSL
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-});
+let pool;
+let isPostgreSQL = false;
+let db; // for sqlite3
+
+if (process.env.DATABASE_URL) {
+  const { Pool } = require('pg');
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  });
+  isPostgreSQL = true;
+} else {
+  const sqlite3 = require('sqlite3').verbose();
+  const dbPath = path.resolve(__dirname, '../deltamarket.db');
+  db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+      console.error('Error opening SQLite database:', err);
+    } else {
+      // Enable foreign key constraints
+      db.run('PRAGMA foreign_keys = ON;');
+    }
+  });
+}
+
+// Helper function to run queries
+const runQuery = (text, params) => {
+  return new Promise((resolve, reject) => {
+    if (isPostgreSQL) {
+      pool.query(text, params, (err, res) => {
+        if (err) reject(err);
+        else resolve(res);
+      });
+    } else {
+      // For SQLite, we need to differentiate between SELECT and other queries
+      const isSelect = text.trim().toUpperCase().startsWith('SELECT');
+      const isInsert = text.trim().toUpperCase().startsWith('INSERT');
+      if (isSelect) {
+        db.all(text, params, (err, rows) => {
+          if (err) reject(err);
+          else resolve({ rows });
+        });
+      } else {
+        db.run(text, params, function(err) {
+          if (err) {
+            console.error('SQLite run error:', err, 'SQL:', text, 'Params:', params);
+            reject(err);
+          } else {
+            // For INSERT, we want to return the lastID; for others, we return an empty rows array
+            const lastID = isInsert ? this.lastID : undefined;
+            console.log('SQLite insert lastID:', lastID, 'SQL:', text, 'Params:', params);
+            resolve({ 
+              rows: [], 
+              lastID: lastID 
+            });
+          }
+        });
+      }
+    }
+  });
+};
+
+// Helper function to get single row
+const getRow = (text, params) => {
+  return new Promise((resolve, reject) => {
+    if (isPostgreSQL) {
+      pool.query(text, params, (err, res) => {
+        if (err) reject(err);
+        else resolve(res.rows[0] || null);
+      });
+    } else {
+      db.get(text, params, (err, row) => {
+        if (err) reject(err);
+        else resolve(row || null);
+      });
+    }
+  });
+};
+
+// Helper function to get all rows
+const getAllRows = (text, params) => {
+  return new Promise((resolve, reject) => {
+    if (isPostgreSQL) {
+      pool.query(text, params, (err, res) => {
+        if (err) reject(err);
+        else resolve(res.rows);
+      });
+    } else {
+      db.all(text, params, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    }
+  });
+};
 
 // Initialize database - create tables if they don't exist
 const initDatabase = () => {
-  return pool.query(`
+  // Original schema string (PostgreSQL)
+  let schemaString = `
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       full_name TEXT NOT NULL,
@@ -113,27 +201,40 @@ const initDatabase = () => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
-  `).then(() => {
-    console.log('Database tables created successfully');
-  }).catch(err => {
-    console.error('Error creating tables:', err);
-    throw err;
+  `;
+
+  // Adjust schema for SQLite if needed
+  if (!isPostgreSQL) {
+    // Change SERIAL PRIMARY KEY to INTEGER PRIMARY KEY AUTOINCREMENT
+    schemaString = schemaString.replace(/SERIAL PRIMARY KEY/g, 'INTEGER PRIMARY KEY AUTOINCREMENT');
+    // Note: SQLite does not enforce the length of TEXT, NUMERIC, etc. but that's fine.
+    // Also, we need to ensure that the TIMESTAMP DEFAULT CURRENT_TIMESTAMP works (it does).
+  }
+
+  return new Promise((resolve, reject) => {
+    if (isPostgreSQL) {
+      pool.query(schemaString, (err, res) => {
+        if (err) {
+          console.error('Error creating tables:', err);
+          reject(err);
+        } else {
+          console.log('Database tables created successfully');
+          resolve();
+        }
+      });
+    } else {
+      // For SQLite, we can use exec to run multiple statements
+      db.exec(schemaString, (err) => {
+        if (err) {
+          console.error('Error creating tables:', err);
+          reject(err);
+        } else {
+          console.log('Database tables created successfully');
+          resolve();
+        }
+      });
+    }
   });
-};
-
-// Helper function to run queries
-const runQuery = (text, params) => {
-  return pool.query(text, params);
-};
-
-// Helper function to get single row
-const getRow = (text, params) => {
-  return pool.query(text, params).then(res => res.rows[0] || null);
-};
-
-// Helper function to get all rows
-const getAllRows = (text, params) => {
-  return pool.query(text, params).then(res => res.rows);
 };
 
 module.exports = { pool, initDatabase, runQuery, getRow, getAllRows };
