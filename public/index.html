@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeltaMarket - منصة التجار الرقمية</title>
+    <meta name="api-base-url" content="">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h2>تسجيل الدخول</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>البريد الإلكتروني أو رقم الهاتف</label>
+                    <input type="text" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>كلمة المرور</label>
+                    <input type="password" name="password" required>
+                </div>
+                <button type="submit" class="btn-primary">دخول</button>
+                <div class="form-links">
+                    <a href="#" onclick="showForgotPassword()">نسيت كلمة المرور؟</a>
+                    <a href="#" onclick="showRegister()">إنشاء حساب جديد</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h2>إنشاء حساب جديد</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>الاسم الكامل</label>
+                    <input type="text" name="full_name" required>
+                </div>
+                <div class="form-group">
+                    <label>البريد الإلكتروني</label>
+                    <input type="email" name="email">
+                </div>
+                <div class="form-group">
+                    <label>رقم الهاتف</label>
+                    <input type="tel" name="phone">
+                </div>
+                <div class="form-group">
+                    <label>كلمة المرور</label>
+                    <input type="password" name="password" required>
+                </div>
+                <button type="submit" class="btn-primary">إنشاء حساب</button>
+                <div class="form-links">
+                    <a href="#" onclick="showLogin()">لديك حساب؟ تسجيل دخول</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('forgotPasswordModal')">&times;</span>
+            <h2>استعادة كلمة المرور</h2>
+            <form id="forgotPasswordForm">
+                <div class="form-group">
+                    <label>البريد الإلكتروني أو رقم الهاتف</label>
+                    <input type="text" name="email" required>
+                </div>
+                <button type="submit" class="btn-primary">إرسال رمز التحقق</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- OTP Modal -->
+    <div id="otpModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('otpModal')">&times;</span>
+            <h2>التحقق من رقم الهاتف</h2>
+            <form id="otpForm">
+                <input type="hidden" name="user_id" id="otpUserId">
+                <input type="hidden" name="isPasswordReset" id="otpIsPasswordReset" value="false">
+                <div class="form-group">
+                    <label>رمز التحقق</label>
+                    <input type="text" name="otp" maxlength="6" required>
+                </div>
+                <button type="submit" class="btn-primary">تحقق</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div id="resetPasswordModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('resetPasswordModal')">&times;</span>
+            <h2>إعادة تعيين كلمة المرور</h2>
+            <form id="resetPasswordForm">
+                <input type="hidden" name="user_id" id="resetUserId">
+                <input type="hidden" name="reset_token" id="resetToken">
+                <div class="form-group">
+                    <label>كلمة المرور الجديدة</label>
+                    <input type="password" name="new_password" required>
+                </div>
+                <div class="form-group">
+                    <label>تأكيد كلمة المرور</label>
+                    <input type="password" name="confirm_password" required>
+                </div>
+                <button type="submit" class="btn-primary">تغيير كلمة المرور</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Store Modal -->
+    <div id="createStoreModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('createStoreModal')">&times;</span>
+            <h2>إنشاء متجر جديد</h2>
+            <form id="createStoreForm">
+                <div class="form-group">
+                    <label>اسم المتجر</label>
+                    <input type="text" name="store_name" required>
+                </div>
+                <div class="form-group">
+                    <label>الوصف</label>
+                    <textarea name="description"></textarea>
+                </div>
+                <button type="submit" class="btn-primary">إنشاء المتجر</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div id="addProductModal" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close" onclick="closeModal('addProductModal')">&times;</span>
+            <h2>إضافة منتج جديد</h2>
+            <form id="addProductForm">
+                <input type="hidden" name="product_id" id="productId">
+                <div class="form-group">
+                    <label>اسم المنتج</label>
+                    <input type="text" name="product_name" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>السعر</label>
+                        <input type="number" name="price" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>الكمية</label>
+                        <input type="number" name="stock_quantity" value="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>الوصف</label>
+                    <textarea name="description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>رابط الصورة</label>
+                    <input type="url" name="image_url">
+                </div>
+                <button type="submit" class="btn-primary">حفظ</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Invoice Modal -->
+    <div id="invoiceModal" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close" onclick="closeModal('invoiceModal')">&times;</span>
+            <h2 id="invoiceModalTitle">إنشاء فاتورة بيع</h2>
+            <form id="invoiceForm">
+                <input type="hidden" id="invoiceType" value="sales">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label id="clientLabel">اسم العميل</label>
+                        <input type="text" name="client_name" id="clientName">
+                    </div>
+                    <div class="form-group">
+                        <label id="phoneLabel">رقم الهاتف</label>
+                        <input type="tel" name="client_phone" id="clientPhone">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>اختر المنتجات</label>
+                    <div id="invoiceProducts" class="products-grid"></div>
+                </div>
+                <div class="invoice-total">
+                    <span>الإجمالي: </span>
+                    <span id="invoiceTotal">0</span>
+                </div>
+                <button type="submit" class="btn-primary">إنشاء الفاتورة</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Send Message Modal -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('messageModal')">&times;</span>
+            <h2>إرسال رسالة</h2>
+            <form id="messageForm">
+                <input type="hidden" name="receiver_id" id="messageReceiverId">
+                <div class="form-group">
+                    <label>الرسالة</label>
+                    <textarea name="content" required></textarea>
+                </div>
+                <button type="submit" class="btn-primary">إرسال</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app">
+        <!-- Landing Page -->
+        <div id="landingPage">
+            <header>
+                <div class="logo">
+                    <i class="fas fa-store"></i>
+                    <span>DeltaMarket</span>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="showLogin()">دخول</button>
+                    <button class="btn-primary" onclick="showRegister()">إنشاء حساب</button>
+                    <button class="btn-language" onclick="toggleLanguage()">
+                        <i class="fas fa-language"></i>
+                        <span id="langText">English</span>
+                    </button>
+                </div>
+            </header>
+
+            <main>
+                <section class="hero">
+                    <h1>منصتك الرقمية للتجارة</h1>
+                    <p>إدارة متجرك ومنتجاتك وفواتيرك بسهولة وأمان</p>
+                    <button class="btn-cta" onclick="showRegister()">ابدأ الآن مجاناً</button>
+                </section>
+
+                <section class="features">
+                    <div class="feature-card">
+                        <i class="fas fa-boxes"></i>
+                        <h3>إدارة المنتجات</h3>
+                        <p>أضف وعدل وحذف منتجاتك بسهولة</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-file-invoice"></i>
+                        <h3>الفواتير</h3>
+                        <p>أنشئ فواتير البيع والشراء</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-warehouse"></i>
+                        <h3>المخزون</h3>
+                        <p>تتبع مخزونك تلقائياً</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-comments"></i>
+                        <h3>التواصل</h3>
+                        <p>تواصل مع التجار بأمان</p>
+                    </div>
+                </section>
+
+                <section class="banner">
+                    <h2>انضم إلى مجتمع التجار</h2>
+                    <p> thousands of traders are already using DeltaMarket</p>
+                </section>
+            </main>
+
+            <footer>
+                <p>© 2024 DeltaMarket. جميع الحقوق محفوظة</p>
+            </footer>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="hidden">
+            <header class="dashboard-header">
+                <div class="logo">
+                    <i class="fas fa-store"></i>
+                    <span>DeltaMarket</span>
+                </div>
+                <div class="header-actions">
+                    <div class="user-menu">
+                        <span id="userName"></span>
+                        <button class="btn-icon" onclick="toggleUserMenu()">
+                            <i class="fas fa-user-circle"></i>
+                        </button>
+                    </div>
+                    <div class="user-dropdown hidden" id="userDropdown">
+                        <a href="#" onclick="showProfile()"><i class="fas fa-user"></i> الملف الشخصي</a>
+                        <a href="#" onclick="showSettings()"><i class="fas fa-cog"></i> الإعدادات</a>
+                        <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</a>
+                    </div>
+                    <button class="btn-language" onclick="toggleLanguage()">
+                        <i class="fas fa-language"></i>
+                    </button>
+                </div>
+            </header>
+
+            <main class="dashboard-content">
+                <div class="store-info" id="storeInfo">
+                    <h2 id="storeName">متجري</h2>
+                    <p id="storeDescription"></p>
+                    <button class="btn-secondary" onclick="showCreateStore()" id="createStoreBtn">إنشاء متجر</button>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="dashboard-card" onclick="showProducts()">
+                        <i class="fas fa-box"></i>
+                        <h3>المنتجات</h3>
+                        <p>إدارة منتجات متجرك</p>
+                    </div>
+                    <div class="dashboard-card" onclick="showSalesInvoices()">
+                        <i class="fas fa-shopping-cart"></i>
+                        <h3>فواتير البيع</h3>
+                        <p>مبيعاتك اليومية</p>
+                    </div>
+                    <div class="dashboard-card" onclick="showPurchaseInvoices()">
+                        <i class="fas fa-truck"></i>
+                        <h3>فواتير الشراء</h3>
+                        <p>مشترياتك من الموردين</p>
+                    </div>
+                    <div class="dashboard-card" onclick="showMarketplace()">
+                        <i class="fas fa-globe"></i>
+                        <h3>السوق</h3>
+                        <p>تصفح متاجر الآخرين</p>
+                    </div>
+                    <div class="dashboard-card" onclick="showMessages()">
+                        <i class="fas fa-envelope"></i>
+                        <h3>الرسائل</h3>
+                        <p id="messagesCount">تواصل مع التجار</p>
+                    </div>
+                    <div class="dashboard-card" onclick="showInventory()">
+                        <i class="fas fa-warehouse"></i>
+                        <h3>المخزون</h3>
+                        <p>تتبع المخزون</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Products Page -->
+        <div id="productsPage" class="page hidden">
+            <header class="page-header">
+                <button class="btn-back" onclick="goBack()"><i class="fas fa-arrow-right"></i></button>
+                <h2>إدارة المنتجات</h2>
+                <button class="btn-primary" onclick="showAddProduct()"><i class="fas fa-plus"></i> إضافة منتج</button>
+            </header>
+            <main class="page-content">
+                <div id="productsList" class="products-grid"></div>
+            </main>
+        </div>
+
+        <!-- Marketplace Page -->
+        <div id="marketplacePage" class="page hidden">
+            <header class="page-header">
+                <button class="btn-back" onclick="goBack()"><i class="fas fa-arrow-right"></i></button>
+                <h2>السوق الرقمي</h2>
+            </header>
+            <main class="page-content">
+                <div id="storesList" class="stores-grid"></div>
+            </main>
+        </div>
+
+        <!-- Store Products Page -->
+        <div id="storeProductsPage" class="page hidden">
+            <header class="page-header">
+                <button class="btn-back" onclick="showMarketplace()"><i class="fas fa-arrow-right"></i></button>
+                <h2 id="storeProductsTitle">منتجات المتجر</h2>
+            </header>
+            <main class="page-content">
+                <div id="storeProductsList" class="products-grid"></div>
+            </main>
+        </div>
+
+        <!-- Sales Invoices Page -->
+        <div id="salesInvoicesPage" class="page hidden">
+            <header class="page-header">
+                <button class="btn-back" onclick="goBack()"><i class="fas fa-arrow-right"></i></button>
+                <h2>فواتير البيع</h2>
+                <button class="btn-primary" onclick="showCreateInvoice('sales')"><i class="fas fa-plus"></i> فاتورة جديدة</button>
+            </header>
+            <main class="page-content">
+                <div id="salesInvoicesList" class="invoices-list"></div>
+            </main>
+        </div>
+
+        <!-- Purchase Invoices Page -->
+        <div id="purchaseInvoicesPage" class="page hidden">
+            <header class="page-header">
+                <button class="btn-back" onclick="goBack()"><i class="fas fa-arrow-right"></i></button>
+                <h2>فواتير الشراء</h2>
+                <button class="btn-primary" onclick="showCreateInvoice('purchases')"><i class="fas fa-plus"></i> فاتورة جديدة</button>
+            </header>
+            <main class="page-content">
+                <div id="purchaseInvoicesList" class="invoices-list"></div>
+            </main>
+        </div>
+
+        <!-- Messages Page -->
+        <div id="messagesPage" class="page hidden">
+            <header class="page-header">
+                <button class="btn-back" onclick="goBack()"><i class="fas fa-arrow-right"></i></button>
+                <h2>الرسائل</h2>
+            </header>
+            <main class="page-content messages-layout">
+                <div id="conversationsList" class="conversations-list"></div>
+                <div id="chatArea" class="chat-area hidden">
+                    <div class="chat-header">
+                        <h3 id="chatUserName"></h3>
+                    </div>
+                    <div id="chatMessages" class="chat-messages"></div>
+                    <div class="chat-input">
+                        <input type="text" id="messageInput" placeholder="اكتب رسالتك...">
+                        <button class="btn-primary" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Inventory Page -->
+        <div id="inventoryPage" class="page hidden">
+            <header class="page-header">
+                <button class="btn-back" onclick="goBack()"><i class="fas fa-arrow-right"></i></button>
+                <h2>المخزون</h2>
+            </header>
+            <main class="page-content">
+                <div id="inventoryList" class="inventory-grid"></div>
+            </main>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
